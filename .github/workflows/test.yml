@@ -1,0 +1,19 @@
+name: C Test
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deps
+        run: |
+          sudo apt update
+          sudo apt install zlib*
+      - name: make
+        run: make
