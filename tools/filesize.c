@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glob.h>
 #include "../lib/deflate.h"
 
-void getFilename(char **filePtr, char *ogPathPtr)
+void getfilename(char **filePtr, char *ogPathPtr)
 {
     char *slash = ogPathPtr, *next;
     while ((next = strpbrk(slash + 1, "\\/")))
@@ -13,7 +14,7 @@ void getFilename(char **filePtr, char *ogPathPtr)
     *filePtr = strdup(slash);
 }
 
-char *prettyBytes(int size)
+char *prettybytes(int size)
 {
     int kb = 1000;
     int mb = kb * 1000;
@@ -45,7 +46,7 @@ char *prettyBytes(int size)
     return str;
 }
 
-int file_size(FILE *source)
+int sizefile(FILE *source)
 {
     char ch;
     int size = 0;
@@ -63,15 +64,12 @@ int file_size(FILE *source)
         ch = fgetc(source);
         size += sizeof(ch);
     } while (ch != EOF);
+
     return size;
 }
 
 int main(int argc, char **argv)
 {
-
-    // pointers to each file that'll be created
-    FILE *source, *gzip_file;
-    char *filename;
 
     // if no args are provided, do nothing
     if (argc < 2)
@@ -80,49 +78,76 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    // allocated memory for the name that'll be a combination of the file name
-    // and the added extensions
-    getFilename(&filename, argv[1]);
-    char *gzip_file_name = malloc(strlen("compressed") + strlen(filename) + sizeof("_.gz"));
+    glob_t globbuf;
 
-    source = fopen(argv[1], "r");
+    // handle only the immediate next glob/pattern of args
+    globbuf.gl_offs = 0;
+    glob(argv[1], GLOB_DOOFFS, NULL, &globbuf);
 
-    if (NULL == source)
+    // if nothing matches then well, show a error regarding the same
+    if (globbuf.gl_pathc == 0)
     {
-        perror("failed to read source file...");
+        perror("No files matching the given pattern");
         exit(EXIT_FAILURE);
     }
 
-    sprintf(gzip_file_name, "compressed_%s.gz", filename);
-    gzip_file = fopen(gzip_file_name, "w+b");
+    char *tableBuf = malloc(100);
+    int tableBuffLen = 0;
+    tableBuffLen += sprintf(tableBuf + tableBuffLen, "|file|size|gzip|\n");
+    tableBuffLen += sprintf(tableBuf + tableBuffLen, "|---|---|---|\n");
 
-    if (NULL == gzip_file)
+    for (int i = 0; i < globbuf.gl_pathc; i++)
     {
-        perror("failed to create temporary compressed file...");
-        exit(EXIT_FAILURE);
+        // temporary pointers to each file that'll be created
+        FILE *source, *gzip_file;
+        char *filename;
+
+        // get the filen
+        getfilename(&filename, globbuf.gl_pathv[i]);
+
+        char *gzip_file_name = malloc(strlen("compressed") + strlen(filename) + sizeof("_.gz"));
+
+        source = fopen(globbuf.gl_pathv[i], "r");
+        if (NULL == source)
+        {
+            perror("failed to read source file...");
+            exit(EXIT_FAILURE);
+        }
+
+        sprintf(gzip_file_name, "compressed_%s.gz", filename);
+        gzip_file = fopen(gzip_file_name, "w+b");
+        if (NULL == gzip_file)
+        {
+            perror("failed to create temporary compressed file...");
+            exit(EXIT_FAILURE);
+        }
+
+        deflateFile(source, gzip_file, 6);
+
+        char *og_size = prettybytes(sizefile(source));
+        char *gz_size = prettybytes(sizefile(gzip_file));
+
+        tableBuffLen += sprintf(tableBuf + tableBuffLen, "|%s|%s|%s|\n", filename, og_size, gz_size);
+
+        tableBuf = (char *)realloc(tableBuf, tableBuffLen * sizeof("a"));
+
+        if (remove(gzip_file_name) != 0)
+        {
+            perror("Failed to remove temporary compressed file. Please do so manually");
+            exit(EXIT_FAILURE);
+        };
+
+        // cleanup
+        fclose(source);
+        fclose(gzip_file);
+        free(og_size);
+        free(gz_size);
+        free(gzip_file_name);
     }
 
-    deflateFile(source, gzip_file, 6);
+    printf("%s", tableBuf);
 
-    char *og_size = prettyBytes(file_size(source));
-    char *gz_size = prettyBytes(file_size(gzip_file));
-
-    printf("|file|size|gzip|\n");
-    printf("|---|---|---|\n");
-    printf("|%s|%s|%s|\n", argv[1], og_size, gz_size);
-
-    if (remove(gzip_file_name) != 0)
-    {
-        perror("Failed to remove temporary compressed file. Please do so manually");
-        exit(EXIT_FAILURE);
-    };
-
-    // cleanup
-    fclose(source);
-    fclose(gzip_file);
-
-    free(og_size);
-    free(gz_size);
-    free(gzip_file_name);
+    free(tableBuf);
+    globfree(&globbuf);
     return 0;
 }
