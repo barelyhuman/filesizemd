@@ -3,6 +3,16 @@
 #include <string.h>
 #include "../lib/deflate.h"
 
+void getFilename(char **filePtr, char *ogPathPtr)
+{
+    char *slash = ogPathPtr, *next;
+    while ((next = strpbrk(slash + 1, "\\/")))
+        slash = next;
+    if (ogPathPtr != slash)
+        slash++;
+    *filePtr = strdup(slash);
+}
+
 char *prettyBytes(int size)
 {
     int kb = 1000;
@@ -61,6 +71,7 @@ int main(int argc, char **argv)
 
     // pointers to each file that'll be created
     FILE *source, *gzip_file;
+    char *filename;
 
     // if no args are provided, do nothing
     if (argc < 2)
@@ -71,7 +82,8 @@ int main(int argc, char **argv)
 
     // allocated memory for the name that'll be a combination of the file name
     // and the added extensions
-    char *gzip_file_name = malloc(strlen("compressed") + strlen(argv[1]) + sizeof("_.gz"));
+    getFilename(&filename, argv[1]);
+    char *gzip_file_name = malloc(strlen("compressed") + strlen(filename) + sizeof("_.gz"));
 
     source = fopen(argv[1], "r");
 
@@ -81,7 +93,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    sprintf(gzip_file_name, "compressed_%s.gz", argv[1]);
+    sprintf(gzip_file_name, "compressed_%s.gz", filename);
     gzip_file = fopen(gzip_file_name, "w+b");
 
     if (NULL == gzip_file)
@@ -99,19 +111,18 @@ int main(int argc, char **argv)
     printf("|---|---|---|\n");
     printf("|%s|%s|%s|\n", argv[1], og_size, gz_size);
 
-    // cleanup
-    fclose(source);
-    fclose(gzip_file);
-
-    free(og_size);
-    free(gz_size);
-
     if (remove(gzip_file_name) != 0)
     {
         perror("Failed to remove temporary compressed file. Please do so manually");
         exit(EXIT_FAILURE);
     };
 
+    // cleanup
+    fclose(source);
+    fclose(gzip_file);
+
+    free(og_size);
+    free(gz_size);
     free(gzip_file_name);
     return 0;
 }
