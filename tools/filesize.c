@@ -145,7 +145,7 @@ int main(int argc, char **argv)
         free(gzip_file_name);
     }
 
-    printf("%s", tableBuf);
+    fprintf(stdout, "%s", tableBuf);
 
     free(tableBuf);
     globfree(&globbuf);
