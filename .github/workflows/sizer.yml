@@ -57,15 +57,12 @@ jobs:
             const message = `
             **Base**  
 
-            \`\`\`
             ${{ steps.dev_state_size.outputs.size }}
-            \`\`\`
 
-            **PR**
 
-            \`\`\`
-            ${{ steps.current_state_size.outputs.size }}
-            \`\`\`
+            **PR**  
+
+            ${{ steps.current_state_size.outputs.size }}  
 
             `;
 
