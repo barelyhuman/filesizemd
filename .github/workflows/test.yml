@@ -1,4 +1,4 @@
-name: C Test
+name: Build
 
 on:
   push:
