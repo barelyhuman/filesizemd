@@ -1,3 +1,5 @@
+name: Sizer
+
 on:
   pull_request:
     branches: [dev]
@@ -31,14 +33,14 @@ jobs:
         run: |
           cd base
           make
-          ./bin/filesize bin/filesize > out.md
+          ./bin/filesize ./bin/filesize > out.md
           echo "::set-output name=size::$(cat out.md)"
 
       - id: current_state_size
         run: |
           cd changes
           make
-          ./bin/filesize bin/filesize > out.md
+          ./bin/filesize ./bin/filesize > out.md
           echo "::set-output name=size::$(cat out.md)"
 
       - uses: actions/github-script@v5
