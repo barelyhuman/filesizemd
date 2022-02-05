@@ -33,15 +33,23 @@ jobs:
         run: |
           cd base
           make filesize
-          ./bin/filesize ./bin/filesize | tee out.md
-          echo "::set-output name=size::$(cat out.md)"
+          ./bin/filesize ./bin/filesize > out.md
+          OUT="$(cat out.md)"
+          OUT="${OUT//'%'/'%25'}"
+          OUT="${OUT//$'\n'/'%0A'}"
+          OUT="${OUT//$'\r'/'%0D'}"
+          echo "::set-output name=size::$OUT"
 
       - id: current_state_size
         run: |
           cd changes
           make filesize
-          ./bin/filesize ./bin/filesize | tee out.md
-          echo "::set-output name=size::$(cat out.md)"
+          ./bin/filesize ./bin/filesize > out.md
+          OUT="$(cat out.md)"
+          OUT="${OUT//'%'/'%25'}"
+          OUT="${OUT//$'\n'/'%0A'}"
+          OUT="${OUT//$'\r'/'%0D'}"
+          echo "::set-output name=size::$OUT"
 
       - uses: actions/github-script@v5
         with:
