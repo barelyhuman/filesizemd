@@ -1,7 +1,5 @@
 # filesizemd
 
-## Changes for test pr
-
 > file's sizes as a markdown table (CLI)
 
 [![Build](https://github.com/barelyhuman/filesizemd/actions/workflows/test.yml/badge.svg)](https://github.com/barelyhuman/filesizemd/actions/workflows/test.yml)
