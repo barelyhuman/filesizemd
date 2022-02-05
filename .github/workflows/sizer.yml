@@ -31,14 +31,14 @@ jobs:
         run: |
           cd base
           make
-          ./bin/filesizemd bin/filesizemd > out.md
+          ./bin/filesize bin/filesize > out.md
           echo "::set-output name=size::$(cat out.md)"
 
       - id: current_state_size
         run: |
           cd changes
           make
-          ./bin/filesizemd bin/filesizemd > out.md
+          ./bin/filesize bin/filesize > out.md
           echo "::set-output name=size::$(cat out.md)"
 
       - uses: actions/github-script@v5
