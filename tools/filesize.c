@@ -68,21 +68,13 @@ int sizefile(FILE *source)
     return size;
 }
 
-int main(int argc, char **argv)
+void tablefromglob(char *globPattern, char **tableBuf, int *tableBuffLen)
 {
-
-    // if no args are provided, do nothing
-    if (argc < 2)
-    {
-        perror("filesize needs to be provided with the file/pattern as an argument");
-        exit(EXIT_FAILURE);
-    }
-
     glob_t globbuf;
 
     // handle only the immediate next glob/pattern of args
     globbuf.gl_offs = 0;
-    glob(argv[1], GLOB_DOOFFS, NULL, &globbuf);
+    glob(globPattern, GLOB_DOOFFS, NULL, &globbuf);
 
     // if nothing matches then well, show a error regarding the same
     if (globbuf.gl_pathc == 0)
@@ -90,11 +82,6 @@ int main(int argc, char **argv)
         perror("No files matching the given pattern");
         exit(EXIT_FAILURE);
     }
-
-    char *tableBuf = malloc(100);
-    int tableBuffLen = 0;
-    tableBuffLen += sprintf(tableBuf + tableBuffLen, "|file|size|gzip|\n");
-    tableBuffLen += sprintf(tableBuf + tableBuffLen, "|---|---|---|\n");
 
     for (int i = 0; i < globbuf.gl_pathc; i++)
     {
@@ -122,15 +109,18 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
+        // compress the file to a gzip archive using level 6, can try with level 7
         deflateFile(source, gzip_file, 6);
 
         char *og_size = prettybytes(sizefile(source));
         char *gz_size = prettybytes(sizefile(gzip_file));
 
-        tableBuffLen += sprintf(tableBuf + tableBuffLen, "|%s|%s|%s|\n", filename, og_size, gz_size);
+        *tableBuffLen += sprintf(*tableBuf + *tableBuffLen, "|%s|%s|%s|\n", filename, og_size, gz_size);
 
-        tableBuf = (char *)realloc(tableBuf, tableBuffLen * sizeof("a"));
+        *tableBuf = (char *)realloc(*tableBuf, *tableBuffLen * sizeof("a"));
 
+        // get rid of the temporary archive that was created
+        // to calculate the archive size
         if (remove(gzip_file_name) != 0)
         {
             perror("Failed to remove temporary compressed file. Please do so manually");
@@ -144,10 +134,36 @@ int main(int argc, char **argv)
         free(gz_size);
         free(gzip_file_name);
     }
+    // cleanup the current glob
+    globfree(&globbuf);
+}
+
+int main(int argc, char **argv)
+{
+
+    // if no args are provided, do nothing
+    if (argc < 2)
+    {
+        perror("filesize needs to be provided with the file/pattern as an argument");
+        exit(EXIT_FAILURE);
+    }
+
+    // allocate enough memory for the first 2 rows
+    // of the table
+    char *tableBuf = (char *)malloc(100);
+    int tableBuffLen = 0;
+
+    tableBuffLen += sprintf(tableBuf + tableBuffLen, "|file|size|gzip|\n");
+    tableBuffLen += sprintf(tableBuf + tableBuffLen, "|---|---|---|\n");
+
+    for (int i = 1; i < argc; i++)
+    {
+        tablefromglob(argv[i], &tableBuf, &tableBuffLen);
+    }
 
     fprintf(stdout, "%s", tableBuf);
 
     free(tableBuf);
-    globfree(&globbuf);
+
     return 0;
 }

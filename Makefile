@@ -24,7 +24,7 @@ lib: $(LIBOBJECTS)
 	ar -crs $(LIBOBJECTS)
 
 test: $(EXECUTABLE)
-	$(BINDIR)/$(EXECUTABLE) Makefile
+	$(BINDIR)/$(EXECUTABLE) Makefile Makefile
 
 clean:
 	rm -rf $(BINDIR)
