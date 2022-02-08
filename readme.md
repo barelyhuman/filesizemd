@@ -34,7 +34,6 @@ filesizemd "lib/*"
 
 ## TODO
 
-- Add handling for multiple globs
 - Add compressed output from [brotli](https://gitub.com/google/brotli)
 
 ## License
