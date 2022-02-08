@@ -14,7 +14,7 @@ void getfilename(char **filePtr, char *ogPathPtr)
     *filePtr = strdup(slash);
 }
 
-char *prettybytes(int size)
+char *prettybytes(long int size)
 {
     int kb = 1000;
     int mb = kb * 1000;
@@ -41,29 +41,27 @@ char *prettybytes(int size)
     }
     else
     {
-        sprintf(str, "%dB", size);
+        sprintf(str, "%ldB", size);
     }
     return str;
 }
 
-int sizefile(FILE *source)
+long int sizefile(FILE *source)
 {
-    char ch;
-    int size = 0;
 
-    if (NULL == source)
+    if (source == NULL)
     {
         perror("Need a file to size...");
         exit(EXIT_FAILURE);
     }
 
-    fseek(source, 0, SEEK_SET);
+    fseek(source, 0L, SEEK_END);
 
-    do
-    {
-        ch = fgetc(source);
-        size += sizeof(ch);
-    } while (ch != EOF);
+    // calculating the size of the file
+    long int size = ftell(source);
+
+    // closing the file
+    fclose(source);
 
     return size;
 }
@@ -95,6 +93,7 @@ void tablefromglob(char *globPattern, char **tableBuf, int *tableBuffLen)
         char *gzip_file_name = malloc(strlen("compressed") + strlen(filename) + sizeof("_.gz"));
 
         source = fopen(globbuf.gl_pathv[i], "r");
+
         if (NULL == source)
         {
             perror("failed to read source file...");
