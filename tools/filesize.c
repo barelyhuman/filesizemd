@@ -60,9 +60,6 @@ long int sizefile(FILE *source)
     // calculating the size of the file
     long int size = ftell(source);
 
-    // closing the file
-    fclose(source);
-
     return size;
 }
 
