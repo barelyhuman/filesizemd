@@ -14,6 +14,6 @@ jobs:
       - name: Deps
         run: |
           sudo apt update
-          sudo apt install zlib*
+          sudo apt install zlib* libbrotli-dev
       - name: make
         run: make

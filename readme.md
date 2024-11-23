@@ -26,15 +26,11 @@ filesizemd "lib/*"
 **Output**
 
 ```
-|file|size|gzip|
-|---|---|---|
-|deflate.c|2.05KB|49B|
-|deflate.h|132B|92B|
+|file|size|gzip|brotli|
+|---|---|---|---|
+|deflate.c|2.05KB|893B|948B|
+|deflate.h|131B|91B|87B|
 ```
-
-## TODO
-
-- Add compressed output from [brotli](https://gitub.com/google/brotli)
 
 ## License
 

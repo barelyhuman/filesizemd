@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS=-lz 
+C_INCLUDES:=$(shell pkg-config --cflags libbrotlicommon libbrotlidec libbrotlienc)
+L_INCLUDES:=$(shell pkg-config --libs libbrotlicommon libbrotlidec libbrotlienc)
+CFLAGS=-lz ${C_INCLUDES} ${L_INCLUDES}
 LIBSOURCES = $(wildcard lib/*.c) 
 SOURCES = $(LIBSOURCES) tools/filesize.c
 OBJDIR = $(BINDIR)/obj
@@ -33,3 +35,7 @@ clean:
 $(OBJECTS): $$(patsubst %.o,%.c,$$(patsubst $$(OBJDIR)/%,%,$$@)) | $(DIRS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -Ilib \
         -c $(patsubst %.o,%.c,$(patsubst $(OBJDIR)/%,%,$@)) -o $@
+
+.PHONY:
+fmt:
+	clang-format -i tools/filesize.c
