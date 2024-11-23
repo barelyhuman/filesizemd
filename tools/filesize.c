@@ -99,8 +99,9 @@ void table_from_glob(char *globPattern, char **tableBuf, int *tableBuffLen) {
       exit(EXIT_FAILURE);
     }
 
-    // compress the file to a gzip archive using level 6, can try with level 7
-    deflateFile(source, gzip_file, 6);
+    // switch to 7 since it caps the compression for most text and binary outputs 
+    // and is fast enough to size for
+    deflateFile(source, gzip_file, 7);
 
     sprintf(brotli_file_name, "compressed_%s.br", filename);
     brotli_file = fopen(brotli_file_name, "w+b");
@@ -193,7 +194,7 @@ void brotli_compress(FILE *infile, FILE *outfile) {
   while ((input_size = fread(input_buffer, 1, CHUNK_SIZE, infile)) > 0) {
     output_size = CHUNK_SIZE * 2;
 
-    if (!BrotliEncoderCompress(6, BROTLI_DEFAULT_WINDOW, BROTLI_MODE_GENERIC,
+    if (!BrotliEncoderCompress(BROTLI_MAX_QUALITY, BROTLI_DEFAULT_WINDOW, BROTLI_MODE_GENERIC,
                                input_size, input_buffer, &output_size,
                                output_buffer)) {
       fprintf(stderr, "Failed to compress data\n");
